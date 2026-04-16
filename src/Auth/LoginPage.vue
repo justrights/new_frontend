@@ -1,25 +1,33 @@
 <template>
-  <div class="login_page">
-    <div class="login">
+  <div class="auth-page">
+    <div class="auth-card">
       <h2>用户登录</h2>
-      <form class="from_submit" @submit.prevent="login">
+      <form class="form-stack" @submit.prevent="login">
         <div>
-          <label class="form_label" for="username">用户名</label>
-          <input id="username" v-model="username" type="text" required autocomplete="username" />
+          <label class="form-label" for="username">用户名</label>
+          <input
+            id="username"
+            class="input"
+            v-model="username"
+            type="text"
+            required
+            autocomplete="username"
+          />
         </div>
         <div>
-          <label class="form_label" for="password">密码</label>
+          <label class="form-label" for="password">密码</label>
           <input
             id="password"
+            class="input"
             v-model="password"
             type="password"
             required
-            autocomplete="current_password"
+            autocomplete="current-password"
           />
         </div>
-        <button type="submit" class="btn_submit">登录</button>
+        <button type="submit" class="btn btn--primary" style="width: 100%">登录</button>
       </form>
-      <p class="foot">没有账号？<router-link to="RegisterPage">去注册</router-link></p>
+      <p class="foot">没有账号？<router-link to="register">去注册</router-link></p>
     </div>
   </div>
 </template>
@@ -27,7 +35,7 @@
 import { ref } from 'vue'
 import { useUserStore } from '../stores/index'
 import { useRouter } from 'vue-router'
-import axios from 'axios'
+import https from '../utils/https'
 
 const username = ref('')
 const password = ref('')
@@ -58,16 +66,16 @@ const login = async () => {
 
   try {
     //向后端发送登录请求
-    const response = await axios.post(
+    const response = await https.post(
       //返回的数据放在data里
-      'http://localhost:8080/auth/login',
+      '/auth/login',
       loginData,
     )
     //从后端返回结果拿到token
     const token = response?.data?.token
 
     //如果登录失败提示并退出
-    if (!response?.data?.succes || !token) {
+    if (!token) {
       alert(response?.data?.message || '登录失败')
       return
     }
@@ -78,13 +86,10 @@ const login = async () => {
       username: username.value,
     })
 
-    //获取角色
-    await store.fetchRoles()
-
     //跳转到首页
     router.push('/')
   } catch (error) {
-    const msg = error?.response?.data?.message || '登录失败'
+    const msg = error?.response?.data?.message || error?.response?.data?.detail || '登录失败'
     alert(msg)
     console.error(error)
   }
