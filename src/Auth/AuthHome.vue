@@ -9,7 +9,7 @@
       <nav class="nav">
         <ul v-if="isLogin">
           <li>
-            <router-link to="/Profile">{{ name }}name</router-link>
+            <router-link to="/profile">{{ displayName }}</router-link>
           </li>
 
           <li v-if="isMerchant">
@@ -76,26 +76,50 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { useUserStore } from '../stores'
+import router from '../router'
+import { onMounted, ref } from 'vue'
+import Panda from '@/assets/panda.jpg'
 import https from '../utils/https'
 
-const Panda = ref('@assets/panda.jpg')
-const name = ref('')
+const store = useUserStore()
+
+const currentUser = ref('')
 const isLogin = ref(false)
-const role = ref('')
+const displayName = ref('')
+const roleName = ref('')
 const isMerchant = ref(false)
 const isRider = ref(false)
 
-try {
-  if (localStorage.getItem('token')) {
-    isLogin.value = true
-  }
+if (store.token) {
+  isLogin.value = true
+}
 
-  const userResponse = await https.get('/auth/me')
-  role.value = userResponse?.data?.role
-  name.value = userResponse?.data?.name
-} catch (error) {
-  alert(error?.userResponse?.data?.message || '未登录')
+onMounted(async () => {
+  if (!store.token) return
+  try {
+    const { data } = await https.get('/auth/me')
+    currentUser.value = data
+    isLogin.value = true
+    displayName.value = data.name || data.username || store.username
+    roleName.value = data.role || ''
+    isMerchant.value = data.role === 'MERCHANT'
+    isRider.value = data.role === 'RIDER'
+  } catch (error) {
+    console.error('获取当前用户失败', error)
+    logout()
+  }
+})
+
+const logout = () => {
+  store.logout()
+
+  isLogin.value = false
+  roleName.value = ''
+  isMerchant.value = false
+  isRider.value = false
+
+  router.push('/')
 }
 </script>
 <style scoped>

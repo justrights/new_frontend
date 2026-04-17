@@ -11,9 +11,18 @@ export const useUserStore = defineStore('index', () => {
     localStorage.setItem('username', payload.username)
     localStorage.setItem('token', payload.token)
   }
+
+  function logout() {
+    username.value = ''
+    token.value = ''
+    localStorage.removeItem('username')
+    localStorage.removeItem('token')
+  }
+
   return {
     username,
     token,
     loginSuccess,
+    logout,
   }
 })
